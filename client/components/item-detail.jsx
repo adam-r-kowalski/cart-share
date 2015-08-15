@@ -17,7 +17,7 @@ ItemDetail = Radium(React.createClass({
 
   rename(list, item, newName) {
     Meteor.call("renameItem", list, item, newName, (err, result) => {
-      FlowRouter.go("/list/" + list.name + "/" + result);
+      FlowRouter.go("/list/" + list.name + "/item/" + result);
     })
   },
 
@@ -52,6 +52,8 @@ ItemDetail = Radium(React.createClass({
   render() {
     let list = this.getList();
     let item = this.getItem(list);
+
+    console.log(item);
 
     return (
       <div>

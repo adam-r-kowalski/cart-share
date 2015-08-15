@@ -51,7 +51,7 @@ ItemRow = Radium(React.createClass({
   },
 
   viewDetail() {
-    FlowRouter.go("/list/" + this.props.list.name + "/" + this.props.obj.item.name);
+    FlowRouter.go("/list/" + this.props.list.name + "/item/" + this.props.obj.item.name);
   },
 
   render() {
@@ -59,7 +59,7 @@ ItemRow = Radium(React.createClass({
 
     return (
       <div>
-        <div style={styles.item}>
+        <SpaceBetween style={styles.item}>
           <Center style={styles.left}>
             <Icon
               name={obj.item.checked ? "check-circle" : "circle-o"}
@@ -70,7 +70,9 @@ ItemRow = Radium(React.createClass({
               {obj.item.name}
             </div>
           </Center>
-        </div>
+
+          <Icon name="chevron-right" margin="0 10px 0 0" color="white" />
+        </SpaceBetween>
 
         {obj.index !== obj.max ?
           <hr style={styles.hr} /> :

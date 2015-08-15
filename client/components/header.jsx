@@ -3,7 +3,8 @@ const getStyles = function(props) {
     container: {
       backgroundColor: props.backgroundColor || "#95a5a6",
       boxShadow: "0 0 5px black",
-      height: 60
+      height: 60,
+      userSelect: "none"
     },
 
     header: {

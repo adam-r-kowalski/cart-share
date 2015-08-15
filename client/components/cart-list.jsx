@@ -2,9 +2,7 @@ const styles = {
   cartList: {
     width: "100%",
     maxWidth: 1000,
-    marginTop: 1,
-    display: "flex",
-    flexDirection: "column"
+    marginTop: 1
   },
 
   input: {
@@ -59,7 +57,7 @@ CartList = Radium(React.createClass({
 
   getInitialState() {
     return {
-      newListName: "",
+      newListName: ""
     };
   },
 
@@ -123,7 +121,7 @@ CartList = Radium(React.createClass({
   render() {
     return (
       <Center>
-        <div style={styles.cartList}>
+        <Column style={styles.cartList}>
           <input
             placeholder="New List Name"
             style={styles.input}
@@ -133,7 +131,7 @@ CartList = Radium(React.createClass({
           />
 
           {this.renderLists()}
-        </div>
+        </Column>
       </Center>
     );
   }

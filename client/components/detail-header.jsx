@@ -101,7 +101,7 @@ DetailHeader = Radium(React.createClass({
         renaming: false
       });
 
-      this.props.rename(this.state.newName);
+      this.props.rename(this.state.newName.trim());
     }
   },
 
@@ -135,6 +135,11 @@ DetailHeader = Radium(React.createClass({
         </Center>
 
         <Center margin="0 10px 0 0">
+          { !this.state.renaming ?
+            this.props.children :
+            null
+          }
+
           { !this.state.renaming ?
             <BorderIcon
               name="pencil"

@@ -60,7 +60,14 @@ Reaktor.init(
     />
 
     <Route
-      path="/list/:listName/:itemName"
+      path="/list/:name/share"
+      layout={Layout}
+      content={ListShare}
+      triggersEnter={checkLogin}
+    />
+
+    <Route
+      path="/list/:listName/item/:itemName"
       layout={Layout}
       content={ItemDetail}
       triggersEnter={checkLogin}

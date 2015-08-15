@@ -20,10 +20,20 @@ Meteor.methods({
   },
 
   renameList: function(name, list) {
-    var current = ShoppingLists.findOne({_id: list._id});
+    let current = ShoppingLists.findOne({_id: list._id});
 
     if (!Meteor.user()) { return current.name; }
     if (!name) { return current.name; }
+
+    let email = Meteor.user().emails[0].address;
+    let lists = ShoppingLists.find({ name: name }).fetch();
+
+    let exists = R.any(
+      x => x,
+      R.map(l => R.contains(email, l.email), lists)
+    );
+
+    if (exists) { return current.name; }
 
     ShoppingLists.update(list._id, {
       $set: {name: name}
@@ -42,10 +52,64 @@ Meteor.methods({
     }
   },
 
+  insertEmail: function(list, email) {
+    if (Validate.email(email)) { return; }
+
+    let current = ShoppingLists.findOne({_id: list._id});
+
+    let exists = R.contains(email, current.email);
+
+    if (exists) { return; }
+
+    let users = Meteor.users.find().fetch();
+
+    exists = R.filter(
+      user => user.emails[0].address == email,
+      users
+    );
+
+    if (exists.length === 0) { return; }
+
+    exists = ShoppingLists.find({
+      email: email
+    }).fetch();
+
+    exists = R.filter(l => l.name == list.name, exists);
+
+    if (exists.length > 0) { return; }
+
+    ShoppingLists.update(list._id, {
+      $push: {
+        email: email
+      }
+    });
+  },
+
+  removeEmail: function(list, email) {
+    ShoppingLists.update(list._id, {
+      $pull: {
+        email: email
+      }
+    });
+
+    let exists = ShoppingLists.findOne({_id: list._id});
+    let currentEmail = Meteor.user().emails[0].address;
+
+    if (!R.contains(currentEmail, exists.email)) {
+      return "redirect";
+    }
+
+    if (exists.email.length > 0) { return; }
+
+    ShoppingLists.remove(list._id);
+
+    return "redirect";
+  },
+
   insertItem: function(list, name) {
     if (!Meteor.user()) { return; }
 
-    const length = R.filter(item => { return item.name == name }, list.items).length
+    const length = R.filter(item => { return item.name == name }, list.items).length;
 
     if (length > 0) { return; }
 
@@ -54,6 +118,8 @@ Meteor.methods({
         items: {
           name: name,
           checked: false,
+          quantity: 1,
+          store: "",
           createdAt: new Date()
         }
       }

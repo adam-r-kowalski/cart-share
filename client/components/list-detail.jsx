@@ -11,6 +11,14 @@ const styles = {
     padding: 10,
     fontSize: 24,
     borderRadius: 0
+  },
+
+  scaling: {
+    "@media (min-width: 500px)": {
+      fontSize: 30,
+      width: 40,
+      height: 40
+    }
   }
 };
 
@@ -109,8 +117,19 @@ ListDetail = Radium(React.createClass({
           backPath="/"
           title={list.name}
           remove={this.remove}
-          rename={this.rename}
-        />
+          rename={this.rename} >
+          <BorderIcon
+            name="users"
+            size={34}
+            fontSize={26}
+            style={styles.scaling}
+            color="white"
+            hoverColor="#9b59b6"
+            backgroundColor="#3498db"
+            onClick={() => FlowRouter.go("/list/" + list.name + "/share")}
+          />
+        </DetailHeader>
+
 
         <Center>
           <div style={styles.cartList}>
