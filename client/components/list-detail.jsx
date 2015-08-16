@@ -73,7 +73,11 @@ ListDetail = Radium(React.createClass({
   addItem() {
     if (!this.state.newItemName) { return; }
 
-    Meteor.call("insertItem", this.getList(), this.state.newItemName, (err) => {
+    Meteor.call("insertItem", this.getList(), this.state.newItemName, (err, result) => {
+      if (result) {
+        Notifications.push({title: result});
+      }
+
       this.setState({newItemName: ""});
     })
   },
@@ -96,14 +100,34 @@ ListDetail = Radium(React.createClass({
   },
 
   remove() {
-    Meteor.call("removeList", this.getList(), (err) => {
+    Meteor.call("removeList", this.getList(), (err, result) => {
+      if (result && result.error) {
+        Notifications.push({ title: result.error });
+      }
+
+      if (result && result.list) {
+        Meteor.call("insertReservedList", result.list);
+
+        Notifications.push({
+          title: "Removed list '" + result.list.name + "'",
+          backgroundColor: "#2ecc71",
+          list: result.list,
+          undo: notification => Meteor.call("undoRemoveList", notification.list),
+          end: notification => Meteor.call("removeReservedList", notification.list)
+        });
+      }
+
       FlowRouter.go("/");
     });
   },
 
   rename(newName) {
     Meteor.call("renameList", newName, this.getList(), (err, result) => {
-      FlowRouter.go("/list/" + result);
+      if (result.error) {
+        Notifications.push({title: result.error});
+      }
+
+      FlowRouter.go("/list/" + result.path);
     });
   },
 
@@ -144,6 +168,8 @@ ListDetail = Radium(React.createClass({
             <div>{this.showItems()}</div>
           </div>
         </Center>
+
+        <NotificationHandler />
       </div>
     );
   }

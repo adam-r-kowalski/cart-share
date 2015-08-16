@@ -1,3 +1,16 @@
+const styles = {
+  quantityContainer: {
+    marginTop: 20,
+    fontSize: 36,
+    userSelect: "none",
+    transition: "0.3s all ease",
+
+    "@media (min-width: 600px)": {
+      fontSize: 48
+    }
+  }
+};
+
 ItemDetail = Radium(React.createClass({
   displayName: "ItemDetail",
 
@@ -49,11 +62,16 @@ ItemDetail = Radium(React.createClass({
     return filtered[0];
   },
 
-  render() {
+  changeQuantity(quantity) {
     let list = this.getList();
     let item = this.getItem(list);
 
-    console.log(item);
+    Meteor.call("changeItemQuantity", list, item, quantity);
+  },
+
+  render() {
+    let list = this.getList();
+    let item = this.getItem(list);
 
     return (
       <div>
@@ -65,7 +83,30 @@ ItemDetail = Radium(React.createClass({
           remove={() => this.remove(list, item)}
           rename={(newName) => this.rename(list, item, newName)}
         />
-        Hello World
+
+        <Column>
+          <Center style={styles.quantityContainer}>
+            <div>Quantity</div>
+
+            <Column style={{marginLeft: 10}}>
+              <BorderIcon
+                name="chevron-up"
+                backgroundColor="white"
+                hoverColor="#e67e22"
+                onClick={this.changeQuantity.bind(this, 1)}
+              />
+
+              <Center>{item.quantity}</Center>
+
+              <BorderIcon
+                name="chevron-down"
+                backgroundColor="white"
+                hoverColor="#e67e22"
+                onClick={this.changeQuantity.bind(this, -1)}
+              />
+            </Column>
+          </Center>
+        </Column>
       </div>
     );
   }

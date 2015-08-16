@@ -8,6 +8,7 @@
 injectTapEventPlugin();
 
 Meteor.subscribe("shopping-lists");
+Meteor.subscribe("reserved-names");
 
 const Layout = Radium(React.createClass({
   displayName: "Layout",

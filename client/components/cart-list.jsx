@@ -113,9 +113,13 @@ CartList = Radium(React.createClass({
   addList() {
     if (!this.state.newListName) { return; }
 
-    Meteor.call("insertList", this.state.newListName);
+    Meteor.call("insertList", this.state.newListName, (err, result) => {
+      if (result) {
+        Notifications.push({title: result});
+      }
 
-    this.setState({newListName: ""});
+      this.setState({newListName: ""});
+    });
   },
 
   render() {
@@ -132,6 +136,8 @@ CartList = Radium(React.createClass({
 
           {this.renderLists()}
         </Column>
+
+        <NotificationHandler />
       </Center>
     );
   }
