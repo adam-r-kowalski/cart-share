@@ -54,12 +54,6 @@ const styles = {
       backgroundColor: "#2ecc71",
       color: "white"
     }
-  },
-
-  error: {
-    height: 30,
-    fontSize: 18,
-    color: "#e74c3c"
   }
 };
 
@@ -70,8 +64,7 @@ SignUp = Radium(React.createClass({
     return {
       email: Session.get("email") || "",
       password: Session.get("password") || "",
-      confirmPassword: "",
-      error: ""
+      confirmPassword: ""
     };
   },
 
@@ -84,33 +77,33 @@ SignUp = Radium(React.createClass({
   signUp() {
     let error = Validate.email(this.state.email);
     if (error) {
-      this.setState({error: error});
+      Notifications.push({ title: error });
       React.findDOMNode(this.refs.email).focus();
       return;
     }
 
     error = Validate.password(this.state.password);
     if (error) {
-      this.setState({error: error});
+      Notifications.push({ title: error });
       React.findDOMNode(this.refs.password).focus();
       return;
     }
 
     if (this.state.confirmPassword != this.state.password) {
-      this.setState({error: "Passwords must match"});
+      Notifications.push({ title: "Passwords must match" });
       React.findDOMNode(this.refs.confirmPassword).focus();
       return;
     }
 
     Accounts.createUser({email: this.state.email, password: this.state.password }, (err) => {
       if (err) {
-        this.setState({error: err.reason});
+        Notifications.push({ title: err.reason });
         return;
       }
 
       Meteor.loginWithPassword(this.state.email, this.state.password, (err) => {
         if (err) {
-          this.setState({error: err.reason});
+          Notifications.push({ title: err.reason });
           return;
         }
 
@@ -138,9 +131,6 @@ SignUp = Radium(React.createClass({
       <Center style={styles.container}>
         <Column style={styles.form}>
           <h1 style={styles.title}>Cart Share - Sign Up</h1>
-
-          <Center style={styles.error}>{this.state.error}</Center>
-
           <Column style={styles.span}>
             <input
               type="email"
@@ -187,6 +177,8 @@ SignUp = Radium(React.createClass({
             </button>
           </div>
         </Column>
+
+        <NotificationHandler />
       </Center>
     );
   }

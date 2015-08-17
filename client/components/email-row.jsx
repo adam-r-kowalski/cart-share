@@ -39,7 +39,18 @@ EmailRow = Radium(React.createClass({
     let obj = this.props.obj;
 
     Meteor.call("removeEmail", obj.list, obj.email, (err, result) => {
-      if (result === "redirect") {
+      if (result.error) {
+        Notifications.push({ title: result.error });
+      }
+
+      if (result.success) {
+        Notifications.push({
+          title: result.success,
+          backgroundColor: "#2ecc71"
+        })
+      }
+
+      if (result.redirect) {
         FlowRouter.go("/");
       }
     });

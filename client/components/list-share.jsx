@@ -93,7 +93,18 @@ ListShare = Radium(React.createClass({
 
     if (!list[0].email) { return; }
 
-    Meteor.call("insertEmail", list[0], this.state.newEmailName, err => {
+    Meteor.call("insertEmail", list[0], this.state.newEmailName, (err, result) => {
+      if (result.error) {
+        Notifications.push({ title: result.error });
+      }
+
+      if (result.success) {
+        Notifications.push({
+          title: result.success,
+          backgroundColor: "#2ecc71"
+        })
+      }
+
       this.setState({newEmailName: ""});
     });
   },
@@ -134,6 +145,8 @@ ListShare = Radium(React.createClass({
             {this.renderEmails(list)}
           </Column>
         </Center>
+
+        <NotificationHandler />
       </div>
     );
   }

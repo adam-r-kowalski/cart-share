@@ -1,6 +1,10 @@
 Meteor.methods({
   insertList: function(name) {
-    if (!Meteor.user()) { return "Must be logged in"; }
+    if (!Meteor.user()) {
+      return {
+        error: "Must be logged in"
+      };
+    }
 
     var email = Meteor.user().emails[0].address;
     var lists = ShoppingLists.find({ name: name }).fetch();
@@ -9,7 +13,11 @@ Meteor.methods({
       return R.contains(email, list.email);
     }, lists));
 
-    if (exists) { return "List '" + name + "' already exists"; }
+    if (exists) {
+      return {
+        error: "List '" + name + "' already exists"
+      };
+    }
 
     lists = ReservedListNames.find({ name: name }).fetch();
 
@@ -18,7 +26,11 @@ Meteor.methods({
       if (R.contains(email, list.email)) { exists = true; }
     }, lists);
 
-    if (exists) { return "List '" + name + "' reserved"; }
+    if (exists) {
+      return {
+        error: "List '" + name + "' reserved"
+      };
+    }
 
     ShoppingLists.insert({
       email: [email],
@@ -26,6 +38,10 @@ Meteor.methods({
       items: [],
       createdAt: new Date()
     });
+
+    return {
+      success: "List '" + name + "' created"
+    }
   },
 
   renameList: function(name, list) {
@@ -66,11 +82,26 @@ Meteor.methods({
       };
     }
 
+    lists = ReservedListNames.find({ name: name }).fetch();
+
+    exists = false;
+    R.map(l => {
+      if (R.contains(email, l.email)) { exists = true; }
+    }, lists);
+
+    if (exists) {
+      return {
+        error: "List '" + name + "' reserved",
+        path: current.name
+      };
+    }
+
     ShoppingLists.update(list._id, {
       $set: {name: name}
     });
 
     return {
+      success: "List '" + current.name + "' renamed to '" + name + "'",
       path: name
     };
   },
@@ -97,15 +128,16 @@ Meteor.methods({
   },
 
   insertEmail: function(list, email) {
-    if (!Meteor.user()) { return; }
+    if (!Meteor.user()) { return { error: "Must be logged in" }; }
 
-    if (Validate.email(email)) { return; }
+    let validation = Validate.email(email);
+    if (validation) { return { error: validation }; }
 
     let current = ShoppingLists.findOne({_id: list._id});
 
     let exists = R.contains(email, current.email);
 
-    if (exists) { return; }
+    if (exists) { return { error: email + " already exists" }; }
 
     let users = Meteor.users.find().fetch();
 
@@ -114,7 +146,7 @@ Meteor.methods({
       users
     );
 
-    if (exists.length === 0) { return; }
+    if (exists.length === 0) { return { error: email + " does not exist" }; }
 
     exists = ShoppingLists.find({
       email: email
@@ -122,17 +154,19 @@ Meteor.methods({
 
     exists = R.filter(l => l.name == list.name, exists);
 
-    if (exists.length > 0) { return; }
+    if (exists.length > 0) { return { error: email + " already has list '" + list.name + "'" }; }
 
     ShoppingLists.update(list._id, {
       $push: {
         email: email
       }
     });
+
+    return { success: "Shared '" + list.name + "' with " + email };
   },
 
   removeEmail: function(list, email) {
-    if (!Meteor.user()) { return; }
+    if (!Meteor.user()) { return { error: "Must be logged in" }; }
 
     ShoppingLists.update(list._id, {
       $pull: {
@@ -144,22 +178,52 @@ Meteor.methods({
     let currentEmail = Meteor.user().emails[0].address;
 
     if (!R.contains(currentEmail, exists.email)) {
-      return "redirect";
+      return {
+        success: "Removed " + email + " from '" + list.name + "'",
+        redirect: true
+      };
     }
 
-    if (exists.email.length > 0) { return; }
+    if (exists.email.length > 0) {
+      return {
+        success: "Removed " + email + " from '" + list.name + "'"
+      };
+    }
 
     ShoppingLists.remove(list._id);
 
-    return "redirect";
+    return {
+      success: "Removed " + email + " from '" + list.name + "'",
+      redirect: true
+    };
   },
 
   insertItem: function(list, name) {
-    if (!Meteor.user()) { return "Must be logged in"; }
+    if (!Meteor.user()) {
+      return {
+        error: "Must be logged in"
+      };
+    }
 
     const length = R.filter(item => { return item.name == name }, list.items).length;
 
-    if (length > 0) { return "Item '" + name + "' already exists"; }
+    if (length > 0) {
+      return {
+        error: "Item '" + name + "' already exists"
+      };
+    }
+
+    let exists = ReservedItemNames.findOne({
+      listName: list.name,
+      itemName: name,
+      email: Meteor.user().emails[0].address
+    });
+
+    if (exists) {
+      return {
+        error: "Item '" + name + "' reserved"
+      };
+    }
 
     ShoppingLists.update(list._id, {
       $push: {
@@ -167,20 +231,48 @@ Meteor.methods({
           name: name,
           checked: false,
           quantity: 1,
-          store: "",
           createdAt: new Date()
         }
       }
     });
+
+    return {
+      success: "Item '" + name + "' created"
+    }
   },
 
   removeItem: function(list, item) {
-    if (!Meteor.user()) { return; }
-
-    console.log(list, item);
+    if (!Meteor.user()) {
+      return {
+        error: "Must be logged in"
+      };
+    }
 
     ShoppingLists.update(list._id, {
       $pull: { items: item }
+    });
+
+    return {
+      success: {
+        list,
+        item
+      }
+    };
+  },
+
+  undoRemoveItem: function(success) {
+    let list = success.list;
+    let item = success.item;
+
+    ShoppingLists.update(list._id, {
+      $push: {
+        items: {
+          name: item.name,
+          checked: item.checked,
+          quantity: item.quantity,
+          createdAt: item.createdAt
+        }
+      }
     });
   },
 
@@ -201,15 +293,45 @@ Meteor.methods({
   },
 
   renameItem: function(list, item, name) {
-    if (!Meteor.user()) { return item.name; }
+    if (!Meteor.user()) {
+      return {
+        error: "Must be logged in",
+        path: item.name
+      };
+    }
 
     const existing = R.filter(i => {
       return i.name == name;
     }, list.items);
 
-    if (!existing) { return item.name; }
-    if (existing.length > 0) { return item.name; }
-    if (!name) { return item.name; }
+    if (item.name == name) { return { path: item.name }; }
+
+    if (existing && existing.length > 0) {
+      return {
+        error: "Item '" + name + "' already exists",
+        path: item.name
+      };
+    }
+
+    if (!name) {
+      return {
+        error: "Name cannot be blank",
+        path: item.name
+      };
+    }
+
+    let exists = ReservedItemNames.findOne({
+      listName: list.name,
+      itemName: name,
+      email: Meteor.user().emails[0].address
+    });
+
+    if (exists) {
+      return {
+        error: "Item '" + name + "' reserved",
+        path: item.name
+      };
+    }
 
     var items = R.map(function(i) {
       if (i.name == item.name) {
@@ -223,7 +345,10 @@ Meteor.methods({
       $set: { items: items }
     });
 
-    return name;
+    return {
+      success: "Item '" + item.name + "' renamed to '" + name + "'",
+      path: name
+    };
   },
 
   changeItemQuantity: function(list, item, quantity) {
@@ -262,5 +387,33 @@ Meteor.methods({
     })._id;
 
     ReservedListNames.remove(id);
+  },
+
+  insertReservedItem: function(success) {
+    if (!Meteor.user()) { return; }
+
+    let list = success.list;
+    let item = success.item;
+
+    ReservedItemNames.insert({
+      listName: list.name,
+      itemName: item.name,
+      email: list.email
+    });
+  },
+
+  removeReservedItem: function(success) {
+    if (!Meteor.user()) { return; }
+
+    let list = success.list;
+    let item = success.item;
+
+    let id = ReservedItemNames.findOne({
+      listName: list.name,
+      itemName: item.name,
+      email: list.email
+    })._id;
+
+    ReservedItemNames.remove(id);
   }
 });

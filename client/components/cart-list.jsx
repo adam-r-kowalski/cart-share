@@ -114,8 +114,15 @@ CartList = Radium(React.createClass({
     if (!this.state.newListName) { return; }
 
     Meteor.call("insertList", this.state.newListName, (err, result) => {
-      if (result) {
-        Notifications.push({title: result});
+      if (result.error) {
+        Notifications.push({ title: result.error });
+      }
+
+      if (result.success) {
+        Notifications.push({
+          title: result.success,
+          backgroundColor: "#2ecc71"
+        })
       }
 
       this.setState({newListName: ""});

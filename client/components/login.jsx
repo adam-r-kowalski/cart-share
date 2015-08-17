@@ -54,12 +54,6 @@ const styles = {
       backgroundColor: "#2ecc71",
       color: "white"
     }
-  },
-
-  error: {
-    height: 30,
-    fontSize: 18,
-    color: "#e74c3c"
   }
 };
 
@@ -69,35 +63,34 @@ Login = Radium(React.createClass({
   getInitialState() {
     return {
       email: Session.get("email") || "",
-      password: Session.get("password") || "",
-      error: ""
+      password: Session.get("password") || ""
     };
   },
 
   login() {
     let error = Validate.email(this.state.email);
     if (error) {
-      this.setState({error: error});
+      Notifications.push({ title: error });
       React.findDOMNode(this.refs.email).focus();
       return;
     }
 
     error = Validate.password(this.state.password);
     if (error) {
-      this.setState({error: error});
+      Notifications.push({ title: error });
       React.findDOMNode(this.refs.password).focus();
       return;
     }
 
     Meteor.loginWithPassword(this.state.email, this.state.password, (err) => {
       if (err) {
+        Notifications.push({ title: err.reason });
+
         if (err.reason === "User not found") {
           Session.set("email", this.state.email);
           Session.set("password", this.state.password);
           FlowRouter.go("/signup");
         }
-
-        this.setState({error: err.reason});
       } else {
         Session.set("email", null);
         Session.set("password", null);
@@ -128,8 +121,6 @@ Login = Radium(React.createClass({
       <Center style={styles.container}>
         <Column style={styles.form}>
           <h1 style={styles.title}>Cart Share - Login</h1>
-
-          <Center style={styles.error}>{this.state.error}</Center>
 
           <Column style={styles.span}>
             <input
@@ -167,6 +158,8 @@ Login = Radium(React.createClass({
             </button>
           </div>
         </Column>
+
+        <NotificationHandler />
       </Center>
     );
   }

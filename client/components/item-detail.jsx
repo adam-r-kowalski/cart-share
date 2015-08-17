@@ -23,14 +23,42 @@ ItemDetail = Radium(React.createClass({
   },
 
   remove(list, item) {
-    Meteor.call("removeItem", list, item, (err) => {
+    Meteor.call("removeItem", list, item, (err, result) => {
+      if (result.error) {
+        Notifications.push({ title: result.error });
+      }
+
+      if (result.success) {
+        Meteor.call("insertReservedItem", result.success);
+
+        Notifications.push({
+          title: "Removed item '" + result.success.item.name + "'",
+          backgroundColor: "#2ecc71",
+          undo: () => Meteor.call("undoRemoveItem", result.success),
+          end: () => Meteor.call("removeReservedItem", result.success)
+        });
+      }
+
       FlowRouter.go("/list/" + list.name);
     });
   },
 
   rename(list, item, newName) {
     Meteor.call("renameItem", list, item, newName, (err, result) => {
-      FlowRouter.go("/list/" + list.name + "/item/" + result);
+      console.log(result);
+
+      if (result.error) {
+        Notifications.push({ title: result.error });
+      }
+
+      if (result.success) {
+        Notifications.push({
+          title: result.success,
+          backgroundColor: "#2ecc71"
+        })
+      }
+
+      FlowRouter.go("/list/" + list.name + "/item/" + result.path);
     })
   },
 
@@ -107,6 +135,8 @@ ItemDetail = Radium(React.createClass({
             </Column>
           </Center>
         </Column>
+
+        <NotificationHandler />
       </div>
     );
   }

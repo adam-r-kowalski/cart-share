@@ -5,10 +5,19 @@ const getStyles = (notification) => {
       bottom: 10,
       left: 10,
       right: 10,
+      zIndex: 100
+    },
+
+    outer: {
+      margin: "0 auto",
+      width: "100%",
+      maxWidth: 1000
+    },
+
+    inner: {
       display: "flex",
       alignItems: "center",
       maxWidth: 500,
-      zIndex: 100,
       backgroundColor: notification.backgroundColor || "#e74c3c"
     },
 
@@ -91,25 +100,29 @@ NotificationHandler = Radium(React.createClass({
 
       return (
         <div style={styles.container}>
-          { notification.undo ?
-            <BorderIcon
-              name="undo"
-              margin="0 0 0 10px"
-              size={30}
-              fontSize={24}
-              color={notification.color || "white"}
-              hoverColor={notification.hoverColor || "black"}
-              backgroundColor={notification.backgroundColor || "#e74c3c"}
-              onClick={() => {
-                Notifications.shift();
-                notification.undo(notification);
-                notification.end(notification);
-              }}
-            /> :
-            null
-          }
+          <div style={styles.outer}>
+            <div style={styles.inner}>
+              { notification.undo ?
+                <BorderIcon
+                  name="undo"
+                  margin="0 0 0 10px"
+                  size={30}
+                  fontSize={24}
+                  color={notification.color || "white"}
+                  hoverColor={notification.hoverColor || "#f1c40f"}
+                  backgroundColor={notification.backgroundColor || "#e74c3c"}
+                  onClick={() => {
+                    Notifications.shift();
+                    notification.undo(notification);
+                    notification.end(notification);
+                  }}
+                /> :
+                null
+              }
 
-          <div style={styles.notification}>{notification.title}</div>
+              <div style={styles.notification}>{notification.title}</div>
+            </div>
+          </div>
         </div>
       );
     }

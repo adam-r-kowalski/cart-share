@@ -74,8 +74,15 @@ ListDetail = Radium(React.createClass({
     if (!this.state.newItemName) { return; }
 
     Meteor.call("insertItem", this.getList(), this.state.newItemName, (err, result) => {
-      if (result) {
-        Notifications.push({title: result});
+      if (result.error) {
+        Notifications.push({title: result.error});
+      }
+
+      if (result.success) {
+        Notifications.push({
+          title: result.success,
+          backgroundColor: "#2ecc71"
+        });
       }
 
       this.setState({newItemName: ""});
@@ -125,6 +132,13 @@ ListDetail = Radium(React.createClass({
     Meteor.call("renameList", newName, this.getList(), (err, result) => {
       if (result.error) {
         Notifications.push({title: result.error});
+      }
+
+      if (result.success) {
+        Notifications.push({
+          title: result.success,
+          backgroundColor: "#2ecc71"
+        })
       }
 
       FlowRouter.go("/list/" + result.path);
